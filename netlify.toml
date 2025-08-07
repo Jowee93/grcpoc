@@ -1,0 +1,6 @@
+[functions]
+directory = "grcpoc/helpers
+
+[build]
+command = "npm run build"
+publish = "dist"
