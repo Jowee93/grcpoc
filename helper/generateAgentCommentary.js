@@ -2,7 +2,7 @@
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.VITE_PUBLIC_OPENAI_API_KEY
+  apiKey: process.env.VITE_PUBLIC_OPENAI_API_KEY,
 });
 
 export async function generateAgentCommentary(risks, controls) {
