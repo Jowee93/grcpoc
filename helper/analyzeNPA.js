@@ -1,7 +1,7 @@
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.VITE_PUBLIC_OPENAI_API_KEY,
+  apiKey: process.env.VITE_PUBLIC_OPENAI_API_KEY
 });
 
 const mockRiskLibrary = ["Liquidity Risk", "Operational Risk", "Market Risk"];
