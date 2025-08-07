@@ -1,5 +1,5 @@
 [functions]
-directory = "grcpoc/helper
+directory = "grcpoc/helper"
 
 [build]
 command = "npm run build"
