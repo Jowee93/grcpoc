@@ -1,75 +1,79 @@
-import { OpenAI } from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.VITE_PUBLIC_OPENAI_API_KEY,
-});
-
-const mockRiskLibrary = ["Liquidity Risk", "Operational Risk", "Market Risk"];
-const mockControlLibrary = {
-  "Liquidity Risk": "Daily liquidity reports",
-  "Operational Risk": "Incident escalation process",
-};
-
+// helper/analyzeNPA.js
 export async function analyzeNPA(productText) {
-  const systemPrompt = `
-You are an operational risk officer simulating a GRC impact assessment for a new product. Assume the new product is from Global Financial Markets and involves complex financial instruments.
+  try {
+    const response = await fetch("/.netlify/functions/analyze-npa", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ productText }),
+    });
 
-1. Summarize the product in 3 concise sentences.
-2. Identify 2–3 key risks using standard risk taxonomy (e.g., Liquidity Risk, Conduct Risk, Distribution Risk).
-3. Determine:
-   - Are any risks new (not in current GRC library)?
-   - Are there any missing controls for the risks?
-4. Recommend next steps:
-   - Add new risk? [No]
-   - Add new control? [Yes]
-   - Alert Line 2? [No]
-5. End with a brief justification (2 sentences) for your recommendation.
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `HTTP error! status: ${response.status}, details: ${
+          errorData.details || "Unknown error"
+        }`
+      );
+    }
 
-Respond in this format:
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error analyzing NPA:", error);
 
-Summary:
-...
+    // Fallback for development/demo purposes
+    return {
+      summary:
+        "Analysis unavailable - using demo data. The product appears to be a complex financial instrument requiring risk assessment.",
+      risks: ["Demo Risk 1", "Demo Risk 2"],
+      controlGaps: "Demo control gaps identified.",
+      recommendations:
+        "Add new control: Yes, demo recommendation for control implementation.",
+      rationale: "Demo rationale for the recommendations provided.",
+    };
+  }
+}
 
-Risks Identified:
-- Delayed project risk mitigation
-- xx
+// helper/generateAgentCommentary.js
+export async function generateAgentCommentary(risks, controls) {
+  try {
+    const response = await fetch("/.netlify/functions/generate-commentary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ risks, controls }),
+    });
 
-Control Gaps:
-- Need to add a new control for Risk ID (R00001) given the new product's complexity.
-- xx
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `HTTP error! status: ${response.status}, details: ${
+          errorData.details || "Unknown error"
+        }`
+      );
+    }
 
-Recommendations:
-- Add new risk: No
-- Add new control: Yes, suggested proper controls to be in place. Elaborate description.
-- Alert Line 2: No
+    const result = await response.json();
+    return result.commentary;
+  } catch (error) {
+    console.error("Error generating commentary:", error);
 
-Rationale:
-...
-`;
+    // Fallback commentary
+    return `**GRC Health Summary**
+    
+Current risk profile shows mixed effectiveness across controls. Several risks show "Poor/Fail" control effectiveness, particularly around operational processes.
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: productText },
-    ],
-  });
+**Key Areas of Concern**
+- R00002 and R00004 showing Major/Moderate net risk with failed controls
+- Control gaps evident in new product governance
+- GFM unit showing multiple risk exposures
 
-  const text = response.choices[0].message.content;
+**Recommendation**
+Line 2 should prioritize review of failed controls and assess adequacy of current control framework for new product initiatives.
 
-  const summary = text.match(/Summary:\s([\s\S]*?)\n\n/)?.[1]?.trim();
-  const risks = Array.from(text.matchAll(/^- (.*?)$/gm)).map((m) => m[1]);
-  const controlGaps = text.match(/Control Gaps:\s([\s\S]*?)\n\n/)?.[1]?.trim();
-  const recommendations = text
-    .match(/Recommendations:\s([\s\S]*?)\n\n/)?.[1]
-    ?.trim();
-  const rationale = text.match(/Rationale:\s([\s\S]*)/)?.[1]?.trim();
-
-  return {
-    summary,
-    risks,
-    controlGaps,
-    recommendations,
-    rationale,
-  };
+*Note: This is a demo commentary as the AI service is currently unavailable.*`;
+  }
 }
